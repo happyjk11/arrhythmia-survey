@@ -44,7 +44,14 @@ def apply_custom_font():
 
         /* 라디오 버튼 선택지 (옵션) 텍스트 크기 강제 */
         div[role="radiogroup"] label[data-baseweb="radio"] div {
-            font-size: 18px !important;
+            font-size: 16px !important;
+        }
+        
+        /* 기기 폭에 맞춰 자연스럽게 줄바꿈이 일어나도록 수정 (잘림 방지) */
+        div[role="radiogroup"] {
+            flex-wrap: wrap !important;
+            gap: 10px 15px !important; /* 위아래 10px, 좌우 15px 간격 */
+            padding-bottom: 5px;
         }
         
         /* 특정 span에 직접 부여한 질문 클래스 (.survey-q) */
@@ -98,12 +105,66 @@ def peds_ql_parent_5_7():
     apply_custom_font()
     responses = {}
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
-    st.subheader("📍 1. 신체적 기능")
-    p_items = ["단거리(100미터 이상) 걷기", "달리기", "활동적인 놀이나 운동", "무거운 것 들기", "혼자서 목욕이나 샤워", "장난감 정리 등 집안일", "아프거나 통증이 있음", "기운이 떨어짐"]
+
+    # 1. 신체적 기능
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "단거리(100미터 이상) 걷기",
+        "달리기",
+        "활동적인 놀이나 운동에 참여하기",
+        "무거운 것 들기",
+        "혼자서 목욕이나 샤워하기",
+        "장난감 정리 등 집안일",
+        "아프거나 통증이 있음",
+        "기운이 떨어짐"
+    ]
     for i, item in enumerate(p_items, 1):
         st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
         res = st.radio(f"q_pp{i}", options.keys(), horizontal=True, key=f"parent_p{i}", label_visibility="collapsed")
         responses[f"보호자_신체_{i}"] = options[res]
+
+    # 2. 정서적 기능
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "슬퍼함",
+        "화를 냄",
+        "잠자기 어려움",
+        "자신에게 일어날 일에 대해 걱정함"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_pe{i}", options.keys(), horizontal=True, key=f"parent_e{i}", label_visibility="collapsed")
+        responses[f"보호자_정서_{i}"] = options[res]
+
+    # 3. 사회적 기능
+    st.subheader("📍 사회적 기능")
+    s_items = [
+        "다른 아이들과 잘 지냄",
+        "다른 아이들이 친구를 하려고 하지 않음",
+        "다른 아이들에게 놀림 당함",
+        "같은 연령대의 다른 아이들이 하는 것을 하지 못함",
+        "다른 아이들과 놀 때 잘 따라감"
+    ]
+    for i, item in enumerate(s_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_ps{i}", options.keys(), horizontal=True, key=f"parent_s{i}", label_visibility="collapsed")
+        responses[f"보호자_사회_{i}"] = options[res]
+
+    # 4. 학교/어린이집에서의 생활/활동 능력
+    st.subheader("📍 학교/어린이집에서의 생활/활동 능력")
+    sch_items = [
+        "수업 시간에 집중을 함",
+        "건망증",
+        "학교/어린이집 활동을 잘 따라감",
+        "컨디션이 좋지 않아 학교/어린이집 결석",
+        "의사의 진료를 받거나 병원에 가기 위해 학교/어린이집 결석"
+    ]
+    for i, item in enumerate(sch_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_psch{i}", options.keys(), horizontal=True, key=f"parent_sch{i}", label_visibility="collapsed")
+        responses[f"보호자_학교_{i}"] = options[res]
+
     return responses
 
 # --- [보호자용 추가 설문: CES-D] ---
@@ -219,23 +280,29 @@ def show_instructions_psoc():
 def psoc_survey_16():
     """양육효능감(PSOC) 16문항"""
     responses = {}
-    # 1~5점 척도 매핑
+    # 1~5점 척도 매핑 (앞에서부터 1, 2, 3, 4, 5)
     options = {"전혀 아니다": 1, "조금 아니다": 2, "보통이다": 3, "그렇다": 4, "매우 그렇다": 5}
+    # 역채점 문항 옵션 (4, 5, 6, 9, 10, 13, 16번) (역채점: 5, 4, 3, 2, 1)
+    rev_options = {"전혀 아니다": 5, "조금 아니다": 4, "보통이다": 3, "그렇다": 2, "매우 그렇다": 1}
     st.subheader("📍 양육효능감 (PSOC)")
     questions = [
     "나는 나의 말과 행동이 아이에게 어떤 영향을 미치는지 알고 있다.", "나는 아이를 능숙하게 돌볼 수 있다고 생각한다.",
-    "나는 아이가 어떤 부분에서 어려움을 보이는지 누구보다 잘 알고 있다.", "나는 아이가 현재 보이고 있는 행동이 발달과정상 그럴 수밖에 없다는 것을 알면서도 짜증이 난다.",
-    "내가 아이를 가르치고 이끌어 주려고 해도, 아이가 내 뜻대로 잘 따라오지 않아 좌절감을 느낀다.", "나는 좋은 부모가 될 수 없을 것 같아 걱정이다.",
+    "나는 아이가 어떤 부분에서 어려움을 보이는지 누구보다 잘 알고 있다.", "나는 아이가 현재 보이고 있는 행동이 발달과정상 그럴 수밖에 없다는 것을 알면서도 짜증이 난다. (역채점)",
+    "내가 아이를 가르치고 이끌어 주려고 해도, 아이가 내 뜻대로 잘 따라오지 않아 좌절감을 느낀다. (역채점)", "나는 좋은 부모가 될 수 없을 것 같아 걱정이다. (역채점)",
     "나는 다른 사람들이 나로부터 좋은 부모역할을 배울 수 있는 괜찮은 모델이라고 생각한다.", "나는 아이와의 관계에서 생기는 문제를 잘 다룬다.",
-    "나는 아이가 나를 좋은 부모라고 생각하는지 자신없다.", "나는 부모로서 아이에게 해준 것이 없다고 느낀다.",
+    "나는 아이가 나를 좋은 부모라고 생각하는지 자신없다. (역채점)", "나는 부모로서 아이에게 해준 것이 없다고 느낀다. (역채점)",
     "나는 아이가 잘못했을 때, 아이 자신이 잘못한 점을 깨달을 수 있도록 잘 설명하고 지도한다.", "나는 부모로서 해야 할 일을 잘 하고 있다.",
-    "나는 부모역할보다는 다른 분야에 더 흥미와 관심이 있다.", "내가 좋은 부모가 되는 것에 조금이라도 더 흥미가 있다면, 나는 지금보다 좀 더 나은 부모가 될 수 있을 것이다.",
-    "나는 좋은 부모가 되는 데 필요한 지식과 방법을 잘 알고 있다.", "부모로서 나는 긴장하고 있으며 불안하다."
+    "나는 부모역할보다는 다른 분야에 더 흥미와 관심이 있다. (역채점)", "내가 좋은 부모가 되는 것에 조금이라도 더 흥미가 있다면, 나는 지금보다 좀 더 나은 부모가 될 수 있을 것이다.",
+    "나는 좋은 부모가 되는 데 필요한 지식과 방법을 잘 알고 있다.", "부모로서 나는 긴장하고 있으며 불안하다. (역채점)"
     ]
+    
+    reverse_items = [4, 5, 6, 9, 10, 13, 16]
     for i, q in enumerate(questions, 1):
+        # 역채점 문항 번호에 해당하면 rev_options 사용
+        current_options = rev_options if i in reverse_items else options
         st.markdown(f'<span class="survey-q">{i}. {q}</span>', unsafe_allow_html=True)
-        res = st.radio(f"q_psoc_{i}", options.keys(), horizontal=True, key=f"psoc_{i}", label_visibility="collapsed")
-        responses[f"PSOC_{i}"] = options[res]
+        res = st.radio(f"q_psoc_{i}", current_options.keys(), horizontal=True, key=f"psoc_{i}", label_visibility="collapsed")
+        responses[f"PSOC_{i}"] = current_options[res]
     return responses
 
 # --- [만 8세 - 만 12세 환아 본인용] ---
@@ -336,21 +403,27 @@ def ces_dc_survey_20():
     apply_custom_font()
     responses = {}
     options = {"극히 드물게(0)": 0, "때로(1)": 1, "상당히(2)": 2, "대부분(3)": 3}
+    rev_options = {"극히 드물게(0)": 3, "때로(1)": 2, "상당히(2)": 1, "대부분(3)": 0}
     questions = [
         "평소에는 아무렇지도 않던 일들이 귀찮게 느껴졌다.", "먹고 싶지 않았다. 배가 고프지 않았다.",
-        "내 기분이 나아지도록 가족과 친구들이 노력해도 즐겁지 않았다.", "나도 다른 아이들만큼 괜찮은 사람이라고 느꼈다.",
+        "내 기분이 나아지도록 가족과 친구들이 노력해도 즐겁지 않았다.", "나도 다른 아이들만큼 괜찮은 사람이라고 느꼈다. (역채점)", # 4번
         "내가 하는 일에 집중하기 어려웠다.", "기분이 울적하고 행복하지 않았다.", "무언가를 하기에 너무 피곤하게 느껴졌다.",
-        "좋은 일이 일어날 것처럼 느껴졌다.", "내가 예전에 했던 일이 잘 풀리지 않는다고 느껴졌다.",
-        "무섭다고 느껴졌다.", "평소에 비해 잠을 잘 자지 못했다.", "행복했다.",
+        "좋은 일이 일어날 것처럼 느껴졌다. (역채점)", # 8번
+        "내가 예전에 했던 일이 잘 풀리지 않는다고 느껴졌다.",
+        "무섭다고 느껴졌다.", "평소에 비해 잠을 잘 자지 못했다.", "행복했다. (역채점)", # 12번
         "나는 평소보다 조용했다.", "친구가 없는 듯 외롭게 느껴졌다.",
         "내가 아는 아이들이 친근하지 않거나 나랑 같이 있고 싶어하지 않는 것처럼 느꼈다.",
-        "즐거웠다.", "울고 싶은 마음이었다.", "슬펐다.", "사람들이 나를 좋아하지 않는 것처럼 느껴졌다.", "무언가를 시작하기가 어려웠다."
+        "즐거웠다. (역채점)", # 16번
+        "울고 싶은 마음이었다.", "슬펐다.", "사람들이 나를 좋아하지 않는 것처럼 느껴졌다.", "무언가를 시작하기가 어려웠다."
     ]
     st.subheader("📍 어린이 우울증 척도 (CES-DC)")
+    
+    reverse_items = [4, 8, 12, 16]
     for i, q in enumerate(questions, 1):
+        current_options = rev_options if i in reverse_items else options
         st.markdown(f'<span class="survey-q">{i}. {q}</span>', unsafe_allow_html=True)
-        res = st.radio(f"q_cesdc_{i}", options.keys(), horizontal=True, key=f"cesdc_{i}", label_visibility="collapsed")
-        responses[f"CESDC_{i}"] = options[res]
+        res = st.radio(f"q_cesdc_{i}", current_options.keys(), horizontal=True, key=f"cesdc_{i}", label_visibility="collapsed")
+        responses[f"CESDC_{i}"] = current_options[res]
     return responses
 
 
@@ -405,8 +478,17 @@ def rs_y_survey_17():
         "문제가 발생하면 해결방법에는 어떤 것들이 있을지 두루 살펴본다", "새로운 문제에 부딪혀도 나는 잘 처리해 나갈 수 있다",
         "나는 도움이 필요할 때 도움을 요청할 사람이 있다", "나는 문제가 생기면 나의 편이 되어줄 친구가 있다",
         "열심히 하면 언제나 보답이 있으리라고 생각한다", "문제가 생기면 그 이유를 파악하기 위해 과거에 일어났던 비슷한 일들을 생각해본다",
-        "예상하지 못한 상황이 있어도 쉽게 포기하지 않는다", "나는 친구와 다른 생각을 가지고 있을 때 친구의 입장에서 생각해 보고 더 잘 이해하려고 노력한다"
-    ]
+        "예상하지 못한 상황이 있어도 쉽게 포기하지 않는다", "나는 친구와 다른 생각을 가지고 있을 때 친구의 입장에서 생각해 보고 더 잘 이해하려고 노력한다",
+        "나는 어려운 상황을 이겨낼 수 있는 능력이 있다", "나는 어려운 일이 닥쳤을 때 내 감정을 통제할 수 있다",
+        "어려운 일이 생기면 그 원인이 무엇인지 신중하게 생각한다", "내 주변 사람들은 대부분 나를 좋아하는 편이다",
+        "누군가에게 화가 날 때 잠시나마 그 사람의 입장이 되려고 노력한다", "나는 내 미래에 대한 희망을 가지고 있다",
+        "나는 내 주변 사람들로부터 사랑과 관심을 받고 있다", "나에게는 항상 기회가 있다고 느낀다",
+        "나는 목표가 정해지면 시간이 오래 걸려도 꾸준히 한다", "나는 대부분의 상황에 잘 대응할 수 있다",
+        "나는 화가 날 때도 참을 수 있다", "어려움이 많더라도 언젠가는 반드시 내 꿈을 이룰 것이다",
+        "나는 내 자신을 믿는다", "남을 비난하기 전에 내가 만일 그 사람의 입장이었다면 어땠을까 생각해본다",
+        "친구가 억울한 일을 당하면 나도 속이 상한다", "나는 한번 시작한 일은 끝까지 해낸다",
+        "나는 방해를 받아도 하고 있는 일에 계속 집중할 수 있다", "나는 기분이 나빠도 내 기분을 잘 드러내지 않는다",
+        "어떤 결정을 내리기 전에 다른 의견을 가진 사람의 입장에서 생각하려고 노력한다", "나는 힘든 일이 생겨도 앞으로 잘 될 것이라고 생각한다"]
     st.subheader("📍 아동청소년 회복탄력성 척도 (RS-Y)")
     for i, q in enumerate(questions, 1):
         st.markdown(f'<span class="survey-q">{i}. {q}</span>', unsafe_allow_html=True)
@@ -422,26 +504,76 @@ def show_instructions_parent_8_12():
 def peds_ql_parent_8_12():
     apply_custom_font()
     responses = {}
-    options = {"전혀 없음(0)": 0, "거의 없음(1)": 1, "가끔 있음(2)": 2, "자주 있음(3)": 3, "거의 항상 있음(4)": 4}
-    sections = {
-        "신체적 기능": ["100미터 이상 걷기", "달리기", "스포츠 활동이나 운동", "무거운 것 들기", "스스로 목욕이나 샤워하기", "집안일 돕기", "몸의 통증", "기운이 없음"],
-        "정서적 기능": ["두려움이나 무서움", "슬픔", "화가 남", "수면 문제", "걱정"],
-        "사회적 기능": ["다른 아이들과 어울리기", "다른 아이들이 친구가 되려 하지 않음", "놀림 당함", "또래가 하는 일을 못함", "아이들과 놀 때 따라가기 힘듦"],
-        "학교 생활": ["수업 집중력", "건망증(잊어버림)", "학업 따라가기", "몸이 아파 결석", "병원 가느라 결석"]
-    }
-    for section, items in sections.items():
-        st.subheader(f"📍 {section}")
-        for i, item in enumerate(items, 1):
-            st.markdown(f'<span class="survey-q">{i}. 아이가 \'{item}\'에 어려움을 보입니까?</span>', unsafe_allow_html=True)
-            res = st.radio(f"q_{section}_{i}", options.keys(), horizontal=True, key=f"p812_{section}_{i}", label_visibility="collapsed")
-            responses[f"보호자812_{section}_{i}"] = options[res]
+    options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
+
+    st.markdown("### 지난 한 달 동안 다음 항목이 귀하의 자녀에게 얼마나 문제가 되었습니까?")
+
+    # 1. 신체적 기능
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "단거리(100미터 이상) 걷기",
+        "달리기",
+        "활동적인 놀이나 운동에 참여하기",
+        "무거운 것 들기",
+        "혼자서 목욕이나 샤워하기",
+        "집안일 하기",
+        "아프거나 통증이 있음",
+        "기운이 떨어짐"
+    ]
+    for i, item in enumerate(p_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_8p{i}", options.keys(), horizontal=True, key=f"parent8_p{i}", label_visibility="collapsed")
+        responses[f"보호자812_신체_{i}"] = options[res]
+
+    # 2. 정서적 기능
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "슬퍼함",
+        "화를 냄",
+        "잠자기 어려움",
+        "자신에게 일어날 일에 대해 걱정함"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_8e{i}", options.keys(), horizontal=True, key=f"parent8_e{i}", label_visibility="collapsed")
+        responses[f"보호자812_정서_{i}"] = options[res]
+
+    # 3. 사회적 기능
+    st.subheader("📍 사회적 기능")
+    s_items = [
+        "다른 아이들과 잘 지냄",
+        "다른 아이들이 친구를 하려고 하지 않음",
+        "다른 아이들에게 놀림 당함",
+        "같은 연령대의 다른 아이들이 하는 것을 하지 못함",
+        "다른 아이들과 놀 때 잘 따라감"
+    ]
+    for i, item in enumerate(s_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_8s{i}", options.keys(), horizontal=True, key=f"parent8_s{i}", label_visibility="collapsed")
+        responses[f"보호자812_사회_{i}"] = options[res]
+
+    # 4. 학교에서의 생활/활동 능력
+    st.subheader("📍 학교에서의 생활/활동 능력")
+    sch_items = [
+        "수업 시간에 집중을 함",
+        "건망증",
+        "학교 활동을 잘 따라감",
+        "컨디션이 좋지 않아 학교 결석",
+        "의사의 진료를 받거나 병원에 가기 위해 학교 결석"
+    ]
+    for i, item in enumerate(sch_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_8sch{i}", options.keys(), horizontal=True, key=f"parent8_sch{i}", label_visibility="collapsed")
+        responses[f"보호자812_학교_{i}"] = options[res]
+
     return responses
 
 
 # --- [만 13세 - 만 18세 환아 본인용: PedsQL] ---
 
 def show_instructions_13_18():
-    """만 13세 - 만 17세 환아 본인용 지시사항"""
+    """만 13세 - 만 18세 환아 본인용 지시사항"""
     st.info("💡 **환아 본인를 위한 지시사항**")
     st.markdown("다음은 여러분에게 문제가 될 수 있는 일들이 나열되어 있습니다. **지난 한 달 동안** 각각의 항목이 여러분에게 얼마나 문제가 되었는지 해당되는 숫자를 선택해 주세요.")
 
@@ -471,22 +603,73 @@ def peds_ql_parent_13_18():
     apply_custom_font()
     responses = {}
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
-    sections = {
-        "신체적 기능": ["100미터 이상 걷기", "달리기", "활동적인 놀이나 운동", "무거운 것 들기", "혼자서 목욕이나 샤워", "집안일 하기", "통증이 있음", "기운이 떨어짐"],
-        "정서적 기능": ["두려워 함", "슬퍼함", "화를 냄", "잠자기 어려움", "걱정함"],
-        "사회적 기능": ["다른 십대들과 잘 지냄", "친구가 되려 하지 않음", "놀림 당함", "또래 활동 못함", "또래를 잘 따라감"],
-        "학교 생활": ["집중을 함", "건망증", "공부 따라감", "몸이 아파 결석", "병원 방문 결석"]
-    }
-    for section, items in sections.items():
-        st.subheader(f"📍 {section}")
-        for i, item in enumerate(items, 1):
-            st.markdown(f'<span class="survey-q">{i}. 자녀가 \'{item}\'에 어려움을 보입니까?</span>', unsafe_allow_html=True)
-            res = st.radio(f"q_{section}_{i}", options.keys(), horizontal=True, key=f"p1318_{section}_{i}", label_visibility="collapsed")
-            responses[f"보호자1318_{section}_{i}"] = options[res]
+
+    st.markdown("### 지난 한 달 동안 다음 항목이 귀하의 십대 자녀에게 얼마나 문제가 되었습니까?")
+
+    # 1. 신체적 기능
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "단거리(100미터 이상) 걷기",
+        "달리기",
+        "활동적인 놀이나 운동에 참여하기",
+        "무거운 것 들기",
+        "혼자서 목욕이나 샤워하기",
+        "집안일 하기",
+        "아프거나 통증이 있음",
+        "기운이 떨어짐"
+    ]
+    for i, item in enumerate(p_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_13p{i}", options.keys(), horizontal=True, key=f"parent13_p{i}", label_visibility="collapsed")
+        responses[f"보호자1318_신체_{i}"] = options[res]
+
+    # 2. 정서적 기능
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "슬퍼함",
+        "화를 냄",
+        "잠자기 어려움",
+        "자신에게 일어날 일에 대해 걱정함"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_13e{i}", options.keys(), horizontal=True, key=f"parent13_e{i}", label_visibility="collapsed")
+        responses[f"보호자1318_정서_{i}"] = options[res]
+
+    # 3. 사회적 기능
+    st.subheader("📍 사회적 기능")
+    s_items = [
+        "다른 십대들과 잘 지냄",
+        "다른 십대들이 친구를 하려고 하지 않음",
+        "다른 십대들에게 놀림 당함",
+        "또래의 다른 십대들이 하는 것을 하지 못함",
+        "다른 십대들과 놀 때 잘 따라감"
+    ]
+    for i, item in enumerate(s_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_13s{i}", options.keys(), horizontal=True, key=f"parent13_s{i}", label_visibility="collapsed")
+        responses[f"보호자1318_사회_{i}"] = options[res]
+
+    # 4. 학교에서의 생활/활동 능력
+    st.subheader("📍 학교에서의 생활/활동 능력")
+    sch_items = [
+        "수업 시간에 집중을 함",
+        "건망증",
+        "학교 활동을 잘 따라감",
+        "컨디션이 좋지 않아 학교 결석",
+        "의사의 진료를 받거나 병원에 가기 위해 학교 결석"
+    ]
+    for i, item in enumerate(sch_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_13sch{i}", options.keys(), horizontal=True, key=f"parent13_sch{i}", label_visibility="collapsed")
+        responses[f"보호자1318_학교_{i}"] = options[res]
+
     return responses
-    # --- [만 18세 - 만 25세 청년 본인용] ---
+
+    # --- [만 19세 - 만 25세 청년 본인용] ---
 def show_instructions_18_25():
-    st.info("💡 **청년(18-25세)을 위한 지시사항**")
+    st.info("💡 **청년(19-25세)을 위한 지시사항**")
     st.markdown("다음은 여러분에게 문제가 될 수 있는 일들입니다. **지난 한 달 동안** 각각의 항목이 여러분에게 얼마나 문제가 되었는지 해당되는 숫자에 표시해 주세요.")
 
 def peds_ql_18_25():
@@ -495,11 +678,38 @@ def peds_ql_18_25():
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
     
     sections = {
-        "나의 건강 및 활동": ["100미터 이상 걷기", "달리기", "스포츠 활동이나 운동", "무거운 것 들기", "혼자서 목욕이나 샤워하기", "집안일 하기", "몸의 통증", "기운이 없음"],
-        "나의 기분": ["두렵거나 무섭다", "슬프다", "화가 난다", "잠자는데 어려움이 있다", "앞으로 일어날 일들에 대해 걱정한다"],
-        "다른 사람들과 어울리기": ["다른 청년들과 어울리기가 힘들다", "다른 청년들이 나와 친구가 되고 싶어하지 않는다", "다른 청년들이 나를 놀린다", "나와 같은 또래의 사람들이 보통 할 수 있는 일을 하지 못한다", "보통의 또래들을 잘 따라가지 못한다"]
+        "나의 건강 및 활동에 관하여 (다음과 같은 문제가...)": [
+        "나는 100 미터 이상 걷기 힘들다",
+        "나는 달리는 것이 힘들다",
+        "나는 스포츠 활동이나 운동을 하기가 힘들다",
+        "나는 무거운 것을 들기가 힘들다",
+        "나는 혼자서 목욕이나 샤워를 하기가 힘들다",
+        "나는 집안일을 돕는 것이 힘들다",
+        "나는 몸이 아프거나 통증이 있다",
+        "나는 기운이 떨어진다"
+    ],
+    "나의 기분에 관하여 (다음과 같은 문제가...)": [
+        "나는 두렵거나 무섭다",
+        "나는 슬프다",
+        "나는 화가 난다",
+        "나는 잠자는 데 어려움이 있다",
+        "나는 나에게 무슨 일이 일어날지 걱정한다"
+    ],
+    "다른 사람들과 어울리기 (다음과 같은 문제가...)": [
+        "나는 다른 성인들과 어울리기가 힘들다",
+        "다른 성인들이 나와 친구가 되고 싶어하지 않는다",
+        "다른 성인들이 나를 놀린다",
+        "나와 같은 나이의 다른 사람들이 할 수 있는 것 중에 내가 하지 못하는 것이 있다",
+        "나는 또래들을 잘 따라가기가 힘들다"
+    ],
+    "나의 직업/학업에 관하여 (다음과 같은 문제가...)": [
+        "직장 또는 학교에서 집중하기가 힘들다",
+        "나는 무언가를 깜빡 잊어버린다",
+        "나는 직장 업무 또는 학업을 따라가기가 어렵다",
+        "나는 몸이 좋지 않아 직장에 결근하거나 학교에 결석한다",
+        "나는 의사를 보러 가거나 병원에 가느라 직장에 결근하거나 학교에 결석한다"
+    ]
     }
-    
     for sec_name, items in sections.items():
         st.subheader(f"📍 {sec_name}")
         for i, item in enumerate(items, 1):
@@ -524,7 +734,13 @@ def rs_survey_19():
         "상대방이 화를 내더라도 내 기분대로 하기보다는 그 사람의 말을 먼저 들으려고 한다", "문제가 발생하면 해결방법에는 어떤 것들이 있을지 두루 살펴본다",
         "새로운 문제에 부딪혀도 나는 잘 처리해 나갈 수 있다", "나는 도움이 필요할 때 도움을 요청할 사람이 있다", "나는 문제가 생기면 나의 편이 되어줄 친구가 있다",
         "열심히 하면 언제나 보답이 있으리라고 생각한다", "문제가 생기면 그 이유를 파악하기 위해 과거에 일어났던 비슷한 일들을 생각해본다",
-        "예상하지 못한 상황이 있어도 쉽게 포기하지 않는다", "나는 친구와 다른 생각을 가지고 있을 때 친구의 입장에서 생각해 보고 더 잘 이해하려고 노력한다"
+        "예상하지 못한 상황이 있어도 쉽게 포기하지 않는다", "나는 친구와 다른 생각을 가지고 있을 때 친구의 입장에서 생각해 보고 더 잘 이해하려고 노력한다",
+        "나는 어려운 상황을 이겨낼 수 있는 능력이 있다", "나는 어려운 일이 닥쳤을 때 내 감정을 통제할 수 있다", "어려운 일이 생기면 그 원인이 무엇인지 신중하게 생각한다",
+        "내 주변 사람들은 대부분 나를 좋아하는 편이다", "누군가에게 화가 날 때 잠시나마 그 사람의 입장이 되려고 노력한다", "나는 내 미래에 대한 희망을 가지고 있다",
+        "나는 내 주변 사람들로부터 사랑과 관심을 받고 있다", "나에게는 항상 기회가 있다고 느낀다", "나는 목표가 정해지면 시간이 오래 걸려도 꾸준히 한다",
+        "나는 대부분의 상황에 잘 대응할 수 있다", "나는 화가 날 때도 참을 수 있다", "어려움이 많더라도 언젠가는 반드시 내 꿈을 이룰 것이다", "나는 내 자신을 믿는다",
+        "친구가 억울한 일을 당하면 나도 속이 상한다", "나는 한번 시작한 일은 끝까지 해낸다", "나는 방해를 받아도 하고 있는 일에 계속 집중할 수 있다", "나는 기분이 나빠도 내 기분을 잘 드러내지 않는다",
+        "나는 힘든 일이 생겨도 앞으로 잘 될 것이라고 생각한다"
     ]
     st.subheader("📍 회복탄력성 척도 (RS)")
     for i, q in enumerate(questions, 1):
@@ -560,6 +776,28 @@ def peds_ql_adult():
 
 
 
+# --- [주관적 신체 활동 평가 (8세 이상 본인용)] ---
+def show_instructions_physical_activity():
+    st.info("💡 **주관적 신체 활동 평가**")
+    st.markdown("다음 질문은 귀하의 평소 신체 활동량에 대한 질문입니다.")
+
+def physical_activity_survey():
+    apply_custom_font()
+
+    responses = {}
+    options = {
+        "0일": 0, "1일": 1, "2일": 2, "3일": 3,
+        "4일": 4, "5일": 5, "6일": 6, "7일": 7
+    }
+    
+    st.subheader("📍 주관적 신체 활동 평가")
+    q = "평균적인 한 주 동안, 하루 60분 이상 몸을 움직이며 활동하는 날이 며칠이나 되나요?"
+    st.markdown(f'<span class="survey-q">{q}</span>', unsafe_allow_html=True)
+    res = st.radio("q_pa_1", options.keys(), horizontal=True, key="pa_1", label_visibility="collapsed")
+    responses["신체활동_일수"] = options[res]
+    
+    return responses
+
 # --- [만 1~12개월 영아 보호자용 PedsQL] ---
 def show_instructions_infant_1_12m():
     st.info("💡 **영아(1~12개월) 보호자 설문 지시사항**")
@@ -569,19 +807,64 @@ def peds_ql_infant_1_12m():
     apply_custom_font()
     responses = {}
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
-    
-    sections = {
-        "신체적 기능": ["아기가 많이 울거나 보챈다", "아기가 쉽게 잠들지 못하거나 자주 깬다", "아기가 평소보다 기운이 없어 보인다", "아기가 수유 시 힘들어하거나 잘 먹지 않으려 한다", "아기의 몸 상태 때문에 외출이나 일상 생활이 힘들다"],
-        "정서적 기능": ["아기가 자주 짜증을 낸다", "아기를 달래기가 힘들다", "아기가 겁이 많거나 자주 놀란다", "아기가 슬퍼 보이거나 우울해 보인다"],
-        "사회적 기능": ["아기가 보호자와의 상호작용(눈 맞춤 등)이 적다", "아기가 다른 사람들에게 지나치게 낯을 가린다", "아기가 주위 환경에 반응을 잘 하지 않는다"]
-    }
-    
-    for sec_name, items in sections.items():
-        st.subheader(f"📍 {sec_name}")
-        for i, item in enumerate(items, 1):
-            st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
-            res = st.radio(f"q_inf1_{sec_name}_{i}", options.keys(), horizontal=True, key=f"inf1_{sec_name}_{i}", label_visibility="collapsed")
-            responses[f"보호자_영아12m_{sec_name}_{i}"] = options[res]
+
+    st.markdown("### 지난 한 달 동안 다음 항목이 여러분의 자녀에게 얼마나 문제가 되었습니까?")
+
+    # 1. 신체적 기능
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "기운이 떨어짐",
+        "활동적인 놀이에 참여하기 힘듦",
+        "아프거나 통증이 있음",
+        "피곤해 함",
+        "무기력함",
+        "많이 쉼"
+    ]
+    for i, item in enumerate(p_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf_p{i}", options.keys(), horizontal=True, key=f"inf1_p{i}", label_visibility="collapsed")
+        responses[f"보호자_영아12m_신체_{i}"] = options[res]
+
+    # 2. 신체적 증상
+    st.subheader("📍 신체적 증상")
+    sym_items = [
+        "배에 가스가 참",
+        "먹은 후 게움",
+        "숨쉬기 힘들어 함",
+        "배탈이 남",
+        "삼키기 힘듦",
+        "변비가 있음",
+        "발진이 있음",
+        "설사를 함",
+        "숨을 쉴 때 쌕쌕거리는 소리가 남",
+        "구토를 함"
+    ]
+    for i, item in enumerate(sym_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf_sym{i}", options.keys(), horizontal=True, key=f"inf1_sym{i}", label_visibility="collapsed")
+        responses[f"보호자_영아12m_신체증상_{i}"] = options[res]
+
+    # 3. 정서적 기능
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "화를 냄",
+        "혼자 있을 때 울거나 짜증을 냄",
+        "화가 났을 때 스스로 진정하기 힘듦",
+        "잠들기 어려움",
+        "안아줄 때 울거나 짜증을 냄",
+        "슬퍼함",
+        "안아서 달래 주어도 진정하기 힘듦",
+        "밤새도록 잠을 설침",
+        "많이 욺",
+        "짜증이 나 있음",
+        "낮잠을 잘 못 잠"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf_e{i}", options.keys(), horizontal=True, key=f"inf1_e{i}", label_visibility="collapsed")
+        responses[f"보호자_영아12m_정서_{i}"] = options[res]
+
     return responses
 
 # --- [만 13~24개월 영유아 보호자용 PedsQL] ---
@@ -593,20 +876,67 @@ def peds_ql_infant_13_24m():
     apply_custom_font()
     responses = {}
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
-    
-    sections = {
-        "신체기능": ["기운이 떨어짐", "활동적인 놀이에 참여하기 힘들", "아프거나 통증이 있음", "피곤해 함", "무기력함", "걷기 힘듦", "넘어지지 않고 짧은 거리를 달리기 힘듦"],
-        "신체증상": ["배에 가스가 참", "먹은 후 게움", "숨쉬기 힘들어 함", "배탈이 남", "삼키기 힘듦", "변비가 있음", "발진이 있음", "설사를 함", "숨을 쉴 때 쌕쌕거리는 소리가 남", "구토를 함"],
-        "정서기능": ["두렵거나 무서워 함", "화를 냄", "혼자 있을 때 울거나 짜증을 냄", "화가 났을 때 진정하기 힘듦", "잠자기 어려움", "슬퍼함", "짜증이 나 있음"],
-        "사회인지": ["다른 사람을 보고 웃지 않음", "양육자와 눈을 맞추지 않음", "양육자의 행동을 모방하지 않음", "사물에 주의를 집중하지 못함", "친숙한 물건 이름 말하기를 어려워 함"]
-    }
-    
-    for sec_name, items in sections.items():
-        st.subheader(f"📍 {sec_name}")
-        for i, item in enumerate(items, 1):
-            st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
-            res = st.radio(f"q_inf24_{sec_name}_{i}", options.keys(), horizontal=True, key=f"inf24_{sec_name}_{i}", label_visibility="collapsed")
-            responses[f"보호자_영유아24m_{sec_name}_{i}"] = options[res]
+
+    st.markdown("### 지난 한 달 동안 다음 항목이 여러분의 자녀에게 얼마나 문제가 되었습니까?")
+
+    # 1. 신체적 기능 (9문항 - 1-12개월과 다름)
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "기운이 떨어짐",
+        "활동적인 놀이에 참여하기 힘듦",
+        "아프거나 통증이 있음",
+        "피곤해 함",
+        "무기력함",
+        "많이 쉼",
+        "너무 피곤해서 잘 놀지 못 함",
+        "걷기 힘듦",
+        "넘어지지 않고 짧은 거리를 달리기 힘듦"
+    ]
+    for i, item in enumerate(p_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf2_p{i}", options.keys(), horizontal=True, key=f"inf2_p{i}", label_visibility="collapsed")
+        responses[f"보호자_영아24m_신체_{i}"] = options[res]
+
+    # 2. 신체적 증상 (10문항 - 동일)
+    st.subheader("📍 신체적 증상")
+    sym_items = [
+        "배에 가스가 참",
+        "먹은 후 게움",
+        "숨쉬기 힘들어 함",
+        "배탈이 남",
+        "삼키기 힘듦",
+        "변비가 있음",
+        "발진이 있음",
+        "설사를 함",
+        "숨을 쉴 때 쌕쌕거리는 소리가 남",
+        "구토를 함"
+    ]
+    for i, item in enumerate(sym_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf2_sym{i}", options.keys(), horizontal=True, key=f"inf2_sym{i}", label_visibility="collapsed")
+        responses[f"보호자_영아24m_신체증상_{i}"] = options[res]
+
+    # 3. 정서적 기능 (12문항 - 동일)
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "화를 냄",
+        "혼자 있을 때 울거나 짜증을 냄",
+        "화가 났을 때 스스로 진정하기 힘듦",
+        "잠자기 어려움",
+        "안아줄 때 울거나 짜증을 냄",
+        "슬퍼함",
+        "안아서 달래 주어도 진정하기 힘듦",
+        "밤새도록 잠을 설침",
+        "많이 욺",
+        "짜증이 나 있음",
+        "낮잠을 잘 못 잠"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_inf2_e{i}", options.keys(), horizontal=True, key=f"inf2_e{i}", label_visibility="collapsed")
+        responses[f"보호자_영아24m_정서_{i}"] = options[res]
+
     return responses
 
 # --- [만 2세 - 만 4세 유아 보호자용 PedsQL] ---
@@ -618,20 +948,68 @@ def peds_ql_toddler_2_4y():
     apply_custom_font()
     responses = {}
     options = {"전혀 없음 (0)": 0, "거의 없음 (1)": 1, "가끔 있음 (2)": 2, "자주 있음 (3)": 3, "거의 항상 있음 (4)": 4}
-    
-    sections = {
-        "신체적 기능": ["걷기", "달리기", "스포츠 활동이나 운동 참여", "무거운 것 들기", "목욕", "장난감 정리 거들기", "통증", "기운이 없음"],
-        "정서적 기능": ["두렵거나 무서워 함", "슬퍼함", "화를 냄", "잠자기 어려움", "걱정함"],
-        "사회적 기능": ["다른 아이들과 함께 놀기", "다른 아이들이 같이 놀고 싶어하지 않음", "놀림 당함", "또래 아이들이 하는 것을 하지 못함", "놀 때 잘 따라감"],
-        "학습/보육기관": ["또래들과 똑같은 활동을 함", "몸이 좋지 않아 결석", "병원에 가기 위해 결석"]
-    }
-    
-    for sec_name, items in sections.items():
-        st.subheader(f"📍 {sec_name}")
-        for i, item in enumerate(items, 1):
-            st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
-            res = st.radio(f"q_tod_{sec_name}_{i}", options.keys(), horizontal=True, key=f"tod_{sec_name}_{i}", label_visibility="collapsed")
-            responses[f"보호자_유아24y_{sec_name}_{i}"] = options[res]
+
+    st.markdown("### 지난 한 달 동안 다음 항목이 여러분의 자녀에게 얼마나 문제가 되었습니까?")
+
+    # 1. 신체적 기능
+    st.subheader("📍 신체적 기능")
+    p_items = [
+        "걷기",
+        "달리기",
+        "활동적인 놀이나 운동에 참여하기",
+        "무거운 것 들기",
+        "목욕",
+        "장난감 정리 거들기",
+        "아프거나 통증이 있음",
+        "기운이 떨어짐"
+    ]
+    for i, item in enumerate(p_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_tod_p{i}", options.keys(), horizontal=True, key=f"tod_p{i}", label_visibility="collapsed")
+        responses[f"보호자_유아24y_신체_{i}"] = options[res]
+
+    # 2. 정서적 기능
+    st.subheader("📍 정서적 기능")
+    e_items = [
+        "두렵거나 무서워 함",
+        "슬퍼함",
+        "화를 냄",
+        "잠자기 어려움",
+        "걱정함"
+    ]
+    for i, item in enumerate(e_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_tod_e{i}", options.keys(), horizontal=True, key=f"tod_e{i}", label_visibility="collapsed")
+        responses[f"보호자_유아24y_정서_{i}"] = options[res]
+
+    # 3. 사회적 기능
+    st.subheader("📍 사회적 기능")
+    s_items = [
+        "다른 아이들과 함께 놀기",
+        "다른 아이들이 같이 놀고 싶어하지 않음",
+        "다른 아이들에게 놀림 당함",
+        "같은 연령대의 다른 아이들이 하는 것을 하지 못 함",
+        "다른 아이들과 놀 때 잘 따라감"
+    ]
+    for i, item in enumerate(s_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_tod_s{i}", options.keys(), horizontal=True, key=f"tod_s{i}", label_visibility="collapsed")
+        responses[f"보호자_유아24y_사회_{i}"] = options[res]
+
+    # 4. 학교/기관에서의 기능 (선택 항목)
+    st.markdown("---")
+    st.markdown("**✅ 아래 항목은 자녀가 학교나 어린이집에 다니는 경우에만 작성해주십시오.**")
+    st.subheader("📍 학교/기관에서의 기능")
+    sch_items = [
+        "또래들과 똑같은 학교/어린이집 활동을 함",
+        "몸이 좋지 않아 학교/어린이집 결석",
+        "병원에 가기 위해 학교/어린이집 결석"
+    ]
+    for i, item in enumerate(sch_items, 1):
+        st.markdown(f'<span class="survey-q">{i}. {item}</span>', unsafe_allow_html=True)
+        res = st.radio(f"q_tod_sch{i}", options.keys(), horizontal=True, key=f"tod_sch{i}", label_visibility="collapsed")
+        responses[f"보호자_유아24y_학교_{i}"] = options[res]
+
     return responses
 
 # --- [소아청소년과 증상 체크 리스트 (PSC-35)] ---
